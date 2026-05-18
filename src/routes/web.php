@@ -1,23 +1,28 @@
 <?php
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Livewire\Livewire;
-use Illuminate\Support\Facades\Response;
 
-/* NOTE: Do Not Remove
-/ Livewire asset handling if using sub folder in domain
-*/
-
-Livewire::setUpdateRoute(function ($handle) {
-    return Route::post(config('app.asset_prefix') . '/livewire/update', $handle);
-});
-
-Livewire::setScriptRoute(function ($handle) {
-    return Route::get(config('app.asset_prefix') . '/livewire/livewire.js', $handle);
-});
-/*
-/ END
-*/
 Route::get('/', function () {
-    return view('welcome');
+    $projects = \App\Models\Project::all() ?? collect();
+    return view('welcome', compact('projects'));
+})->name('home')->name('login'); 
+
+Route::post('/login', function (Request $request) {
+    $credentials = $request->validate([
+        'email' => ['required', 'email'],
+        'password' => ['required'],
+    ]);
+
+    if (Auth::attempt($credentials)) {
+        $request->session()->regenerate();
+        return redirect()->intended('/admin');
+    }
+
+    return redirect()->to('/')->with('login_error', 'Email atau password yang Anda masukkan salah.')->withInput();
 });
+
+Route::post('/contact', function (Request $request) {
+    return back()->with('success', true);
+})->name('contact');
